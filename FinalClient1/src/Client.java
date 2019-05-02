@@ -21,6 +21,7 @@ import java.util.Scanner;
 
 public class Client {
 
+	@SuppressWarnings("deprecation")
 	public static void main(String argv[]) throws Exception {
 
 
@@ -37,15 +38,16 @@ public class Client {
 		int localPortInt = uploadSocket.getLocalPort();
 		String localPort = Integer.toString(localPortInt);
 		String sentence = hostName + ":::" + localPort;
-		String Server = "192.168.1.112";
+		String Server = "192.168.1.149";
 		
 		
-		new Thread(new UploadServer(uploadSocket, localPortInt)).start();
+		Thread t = new Thread(new UploadServer(uploadSocket, localPortInt));
+		t.start();
 		
 	
 		//Connecting to Server
-		//Socket clientSocket = new Socket(Server, 7734);
-		Socket clientSocket = new Socket(localAddr, 7734);
+		Socket clientSocket = new Socket(Server, 7734);
+		//Socket clientSocket = new Socket(localAddr, 7734);
 		
 		
 		
@@ -88,9 +90,9 @@ public class Client {
 				Scanner in = new Scanner(System.in);
 				System.out.print("Input RFC #:");
 				int rfcNo = in.nextInt();
-				//System.out.print("Input Host:");
-				//String host1 = in.next(); //"rpatel16-Lenovo-Y40-80"
-				String host1 = "192.168.1.112";
+				System.out.print("Input Host:");
+				String host1 = in.next(); //"rpatel16-Lenovo-Y40-80"
+				//String host1 = "192.168.1.149";
 				System.out.print("Input Port #:");
 				int portNo = in.nextInt();
 				Socket peerSocket = new Socket(localAddr, portNo);
@@ -229,13 +231,17 @@ public class Client {
 
 		}
 
-		Thread.sleep(4000);
+		//Thread.sleep(4000);
 		
 		// close the socket
 		
 		out.writeObject("CLOSE");
 		System.out.println("Client Closing Socket ....");
+		t.stop();
+		t.join();
 		clientSocket.close();
+		System.out.println("Client Closed Socket!");
+		System.exit(0);
 	}
 
 	
