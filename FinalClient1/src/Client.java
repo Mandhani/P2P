@@ -95,7 +95,7 @@ public class Client {
 				//String host1 = "192.168.1.149";
 				System.out.print("Input Port #:");
 				int portNo = in.nextInt();
-				Socket peerSocket = new Socket(localAddr, portNo);
+				Socket peerSocket = new Socket(host1, portNo);
 				//Socket peerSocket = new Socket("192.168.1.112", portNo);
 				downloadRFC(peerSocket,host1, rfcNo);
 			}
