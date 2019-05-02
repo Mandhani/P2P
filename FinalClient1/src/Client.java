@@ -37,7 +37,8 @@ public class Client {
 		int localPortInt = uploadSocket.getLocalPort();
 		String localPort = Integer.toString(localPortInt);
 		String sentence = hostName + " " + localPort;
-		// String Server = "192.168.1.149";
+		//String Server = argv[0];
+		String Server = "152.46.16.206";
 
 		// Changes
 		// String Server = localAddr;
@@ -46,8 +47,8 @@ public class Client {
 		t.start();
 
 		// Connecting to Server
-		// Socket clientSocket = new Socket(Server, 7734);
-		Socket clientSocket = new Socket(localAddr, 7734);
+		Socket clientSocket = new Socket(Server, 7734);
+		//Socket clientSocket = new Socket(localAddr, 7734);
 
 		// Set Input Output Streams and Buffer
 
