@@ -1,17 +1,10 @@
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,9 +25,9 @@ public class UploadServer implements Runnable {
 
 		System.out.println("Starting Upload server at:" + uploadSocket.getInetAddress().getHostName() + ":" + port);
 		Socket socket;
+		try {
 
-		while (!exit) {
-			try {
+			while (!exit) {
 				System.out.println("Waiting for the request..");
 				socket = uploadSocket.accept();
 				System.out.println("request recieved");
@@ -48,7 +41,7 @@ public class UploadServer implements Runnable {
 				ObjectOutputStream oos = null;
 				oos = new ObjectOutputStream(socket.getOutputStream());
 
-				System.out.println("Abhishek: I am here");
+				//System.out.println("Abhishek: I am here");
 
 				// Peer Request
 
@@ -66,7 +59,11 @@ public class UploadServer implements Runnable {
 
 				// oos.writeObject("Before reading file");
 				File file = new File(request[2] + ".txt");
-
+				if(!file.isFile()) {
+					oos.writeObject("P2P-CI/1.0 404 Not Found" + "\n");
+					System.out.println("File not found. No such RFC here. Invalid request.");
+					continue;
+				}
 				// Getting meta data about file
 
 				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
@@ -83,16 +80,17 @@ public class UploadServer implements Runnable {
 				oos.writeObject(content);
 
 			}
-
-			catch (IOException e) {
-				e.printStackTrace();
-			}
+			System.out.println("Upload Server exiting now...");
+			return;
 		}
-		System.out.println("Upload Server exiting now...");
+
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 
 	}
-	
-	public void stop(){
-        exit = true;
-    }
+
+	public void stop() {
+		exit = true;
+	}
 }

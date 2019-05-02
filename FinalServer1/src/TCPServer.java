@@ -2,13 +2,14 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class TCPServer {
 
 	static final int counter = 7734;
-	static Vector<Peer> peerList;
-	static Vector<Index> rfcList;
+	static ArrayList<Peer> peerList;
+	static ArrayList<Index> rfcList;
 	
 	TCPServer()
 	{
@@ -17,8 +18,8 @@ public class TCPServer {
 	
 	
 	public static void main(String args[]) throws IOException, InterruptedException {
-		peerList = new Vector<Peer>();
-		rfcList = new Vector<Index>();
+		peerList = new ArrayList<Peer>();
+		rfcList = new ArrayList<Index>();
 		
 		ServerSocket conn0 = new ServerSocket(counter);
 		while (true) {
@@ -41,7 +42,7 @@ public class TCPServer {
 
 	}
 	
-	public static void addRFC(String rfcNo,String rfcTitle,Peer peer){
+	public static void addRFC(int rfcNo,String rfcTitle,Peer peer){
 		
 		Index in = new Index();
 		in.setRfcNo(rfcNo);
@@ -54,18 +55,31 @@ public class TCPServer {
 		peerList.add(peer);
 	}
 	
-	public static Vector<Peer> findRFC(int rfcNo){
+	public static ArrayList<Index> findRFC(int rfcNo){
 		
-		Vector<Peer> results = new Vector<Peer>();
+		ArrayList<Index> results = new ArrayList<Index>();
 		for(Index i:rfcList){
-			if(Integer.parseInt(i.getRfcNo()) == rfcNo)
-				results.add(i.getPeer());
+			if(i.getRfcNo() == rfcNo)
+				results.add(i);
 		}
 		return results;
 	}
 	
-	public static Vector<Index> getAllRFCs(){
+	public static ArrayList<Index> getAllRFCs(){
 		return rfcList;
+	}
+	
+	public static void removePeerRFC(String peerName) {
+		//System.out.println("Finding entries to remove for :" +peerName);
+		Collection<Index> removeList = new ArrayList<Index>();
+		for (int i = 0;i<rfcList.size();i++) {
+			if(rfcList.get(i).getPeer().getHostname().equals(peerName)) {
+				removeList.add(rfcList.get(i));
+				//System.out.println("Found one!");
+			}
+		}
+		rfcList.removeAll(removeList);
+		//peerList.remove(peer);
 	}
 }
 

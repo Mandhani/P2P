@@ -1,15 +1,15 @@
 
 public class Index {
 
-	String rfcNo;
+	int rfcNo;
 	String rfcTitle;
 	Peer peer;
 
-	public String getRfcNo() {
+	public int getRfcNo() {
 		return rfcNo;
 	}
 
-	public void setRfcNo(String rfcNo) {
+	public void setRfcNo(int rfcNo) {
 		this.rfcNo = rfcNo;
 	}
 

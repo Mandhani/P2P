@@ -1,18 +1,11 @@
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
-
-import javax.print.attribute.ResolutionSyntax;
 
 
 
@@ -22,7 +15,7 @@ import javax.print.attribute.ResolutionSyntax;
 public class TCPServerThread extends Thread{
 
 	private Socket clientSocket;
-	
+	String hostNameFinal = null;
 	public TCPServerThread(Socket clientSocket, int port) {
 
 		this.clientSocket = clientSocket;
@@ -48,10 +41,13 @@ public class TCPServerThread extends Thread{
 			// Getting Client's hostname 
 			String clienthostname = null;
 			clienthostname = (ois.readObject()).toString();
+			String clientInfo[] = clienthostname.split(" ");
+			hostNameFinal = clientInfo[0];
+
 			
 		
 
-				System.out.println("Connected to:" + clienthostname + ":" );
+				System.out.println("Connected to: " + " IP "+ clientInfo[0]+" Port No "+ clientInfo[1] );
 				
 				//Send message to Client about successful connection
 				oos.writeObject("HOST ADDED SUCCESSFULLY" + "\n");
@@ -59,52 +55,57 @@ public class TCPServerThread extends Thread{
 				
 				
 				// Register client/Peer with the Server
-				int port =1555;
-				TCPServer.addPeer(new Peer(clienthostname, port));
+				int clientPort =  Integer.parseInt(clientInfo[1]);
+				//int port =1555;
+				TCPServer.addPeer(new Peer(hostNameFinal, clientPort));
 				
 				// Request Received from Client
 				
 				
 
 
-				while (true) {
-					
-					String ClientRequest = (String) ois.readObject();
+				while (!sckt1.isClosed()) {
+					String ClientRequest;
+					try {
+						ClientRequest = (String) ois.readObject();
+					} catch (SocketException se) {
+						System.out.println("Client closed Connection!");
+						TCPServer.removePeerRFC(hostNameFinal);
+						break;
+					}
 					//System.out.print(ClientRequest);
 					String request[] = ClientRequest.split(" ");
 						// // Process client input according to the request
 						// command
+					System.out.println("Received :" + request[0]);
 						switch (request[0]){
 						
 					case "CLOSE":
 					{
-							
-							
-							
-							System.out.println("Client Closing Socket ....");
-							sckt1.close();
-							
-							break;
+											
+						System.out.println("Client Closing Socket ....");
+						TCPServer.removePeerRFC(clienthostname);
+						//sckt1.close();
+						System.out.println("Removed entries.");
+						return;
 					}
 						
 						case "ADD":
 
 						{
-							
-							String rfcNo = (String) ois.readObject();
+							int rfcNo = Integer.parseInt((String) ois.readObject());
 							String version	= (String) ois.readObject();
 							String hostName = (String) ois.readObject();
 							int portNo = Integer.parseInt((String)ois.readObject());
 							String rcfTitle = (String) ois.readObject();
-							System.out.println("Test : rcf Title - " + rcfTitle );
+							//System.out.println("Test : rcf Title - " + rcfTitle );
 
 							//clientPort = Integer.parseInt((String) ois.readObject());
-							System.out.println("RFC Added successfully");
-							oos.writeObject("RFC Added successfully");
+							System.out.println("RFC : "+rfcNo+" "+ rcfTitle + " Added successfully");
+							oos.writeObject(version+ " " +"200 OK" +"\n"+ "RFC"+ " "+rfcNo+" "+ rcfTitle+" "+ hostName+" "+portNo );
+							//oos.writeObject("RFC Added successfully");
 							oos.flush();
 							
-							
-		
 							// Update peer List at the Server 
 							Peer p = new Peer(hostName, portNo);
 							TCPServer.addRFC(rfcNo,rcfTitle,p);
@@ -118,14 +119,14 @@ public class TCPServerThread extends Thread{
 						{	
 							System.out.println("Received LIST command");
 							
-							Vector<Index> indexList = TCPServer.getAllRFCs();
+							ArrayList<Index> indexList = TCPServer.getAllRFCs();
 							
 							Iterator<Index> indexItr=indexList.iterator();
 
 							if (!(indexList.isEmpty()))
 										
 							  {
-									oos.writeObject("P2P-CI/1.0 200 OK" + "\n");
+									oos.writeObject("P2P-CI/1.0 200" + "\n");
 		
 									 while(indexItr.hasNext())  
 								        {
@@ -137,8 +138,8 @@ public class TCPServerThread extends Thread{
 							  }
 							else 
 							{
-								oos.writeObject("RFC List Empty");
-								oos.writeObject("Error : 404 Not Found");
+								oos.writeObject("P2P-CI/1.0 404 Not Found" + "\n");
+								//oos.writeObject("Error : 404 Not Found");
 							}
 							
 						}
@@ -149,21 +150,25 @@ public class TCPServerThread extends Thread{
 							System.out.println("Received LOOKUP command");
 							String rfcName = (String) ois.readObject();
 							int rfcNo =  Integer.parseInt(rfcName);
-							String rfcTitle = (String) ois.readObject();
-							Vector<Peer> resList = TCPServer.findRFC(rfcNo);
+							//String rfcTitle = (String) ois.readObject();
+							ArrayList<Index> resList = TCPServer.findRFC(rfcNo);
 							
 							
 							if (!(resList.isEmpty()))
 								{
 									oos.writeObject("P2P-CI/1.0 200 OK" + "\n");
-
-									for(Peer p:resList){
-										oos.writeObject(rfcName+" "+ rfcTitle+ " "+p.getHostname()+" "+Integer.toString(p.getPort()));
+									//Changes :  removed RFC Title
+									for(Index i:resList){
+									 	oos.writeObject(i.getRfcNo()+" "+ i.getRfcTitle()+ " "+ i.getPeer().getHostname()+" "+i.getPeer().getPort());
+										//oos.writeObject(rfcName+" "+ " "+p.getHostname()+" "+Integer.toString(p.getPort()));
 									}
+									 oos.writeObject("end");
 							    }
 							else 
 								{
-										oos.writeObject("Requested RFC Not Found");
+								//System.out.println("Debug : No Item LOOKUP command");
+
+										oos.writeObject("P2P-CI/1.0 404 Not Found" + "\n");
 										//oos.writeObject("Error : 404 Not Found");
 								}
 							
